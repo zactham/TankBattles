@@ -17,17 +17,13 @@ public class TankGame extends JPanel implements KeyListener
 
 
 	private InputManager inputManager;
- 
+
 	private final int gameboardSize = 800;
 	private final int tankWidth = 30;
 	private final int tankHeight = 50;
 
 
 	private int ammoSize = 5;
-	private boolean deleteBullet1 = false;
-	private boolean deleteBullet2 = false;
-	private int bulletIndex1 = 0;
-	private int bulletIndex2 = 0;
 	private final int projSize = 5;
 	private final int projSpeed = 6;
 
@@ -41,17 +37,15 @@ public class TankGame extends JPanel implements KeyListener
 	// tank speed must be a even factor of squareSize
 	private int tankSpeed = tankWidth/10;
 
-	private final int tankClipSize = 10;
 
 	private int tankClip1Size = 10;
 	private int tankClip2Size = 10;
-	
+
 	private int bullet1Added = 0;
 
-	public ArrayList <TankProjectile> tank1Clip = new ArrayList <TankProjectile> (tankClipSize);
+	public ArrayList <TankProjectile> tank1Clip = new ArrayList <TankProjectile>();
 
-	public ArrayList <TankProjectile> tank2Clip = new ArrayList <TankProjectile> (tankClipSize);
-	//TODO delete offscreen
+	public ArrayList <TankProjectile> tank2Clip = new ArrayList <TankProjectile>();
 
 	Tank tank1 = new Tank(0 + 10,gameboardSize - tankHeight - 10,tankWidth, tankHeight, Color.CYAN.darker(), move1);
 
@@ -93,7 +87,7 @@ public class TankGame extends JPanel implements KeyListener
 		frame.setTitle("Tank");
 		frame.setBackground(Color.WHITE);
 
-		JOptionPane.showMessageDialog(start, "Player 1 use WASD and Player 2 use the arrow keys to move the tank around ");
+		JOptionPane.showMessageDialog(start, "Player 1 use WASD and Player 2 use the arrow keys to move the tank around\n use V and DELETE to shoot ");
 		tank1.createBounds(tank1.getX(),tank1.getY(),tankWidth, tankHeight);
 		tank2.createBounds(tank2.getX(),tank2.getY(),tankWidth, tankHeight);
 
@@ -185,14 +179,15 @@ public class TankGame extends JPanel implements KeyListener
 		tank1.update(tankSpeed);
 		tank2.update(tankSpeed);
 
-		for(int i = bulletIndex1; i < tank1Clip.size(); i++)
+		for(int i = 0; i < tank1Clip.size(); i++)
 		{
-			deleteBullet1 = tank1Clip.get(i).update(projSpeed);
+			tank1Clip.get(i).update(projSpeed);
+
 		}
 
-		for(int i = bulletIndex2; i < tank2Clip.size(); i++)
+		for(int i = 0; i < tank2Clip.size(); i++)
 		{
-			deleteBullet2 = tank2Clip.get(i).update(projSpeed);
+			tank2Clip.get(i).update(projSpeed);
 		}
 
 	}
@@ -233,41 +228,29 @@ public class TankGame extends JPanel implements KeyListener
 			tankCollisionReset();
 
 		}
-		
 
-		
-
-		if (bullet1Added > 0)
+		for(int i = 0; i <tank1Clip.size(); i++)
 		{
-			if(tank1Clip.get(bulletIndex1).getBounds().intersects(tank2.getBounds()))
+			if(tank1Clip.get(i).getEnabled() && tank1Clip.get(i).getBounds().intersects(tank2.getBounds()))
 			{
 				System.out.println("Tank 1 bullet hit tank 2");
-				
+				tank1Clip.get(i).setEnabled(false);
+
+			}
+		}
+
+		for(int i = 0; i <tank2Clip.size(); i++)
+		{
+			if(tank2Clip.get(i).getEnabled() && tank2Clip.get(i).getBounds().intersects(tank1.getBounds()))
+			{
+				System.out.println("Tank 2 bullet hit tank 1");
+				tank2Clip.get(i).setEnabled(false);
+
 			}
 		}
 	}
 
 	/*
-		if(tank1Clip.get(bulletIndex1).getShot())
-		{
-			//Checks if the player hits the alien
-			for(int i = alienManager.getNumAliens() - 1; i >-1; i--)
-			{
-				if(alienManager.getAlien(i).getBounds().intersects(player.getShot().getBounds()))
-				{
-
-					player.removeShot();
-					sound.play("sounds/alien_hit.wav");
-					alienHit(alienManager.getAlien(i));
-					increaseScore(alienManager.getAlien(i));
-					alienManager.removeAlien(alienManager.getAlien(i));
-
-
-					break;
-				}
-			}
-		}
-	}
 
 	if(tank1.collide(ammo))
 	{
@@ -328,28 +311,17 @@ public class TankGame extends JPanel implements KeyListener
 		tank1.draw(page);		
 		tank2.draw(page);
 
-
-		for(int i = bulletIndex1; i < tank1Clip.size(); i++)
+		for(int i = 0; i <tank1Clip.size(); i++)
 		{
-
-			if(!deleteBullet1)
-				tank1Clip.get(i).draw(page);
-			else
-				bulletIndex1 = i+1;
-
+			tank1Clip.get(i).draw(page);
 
 		}
 
-		for(int i = bulletIndex2; i < tank2Clip.size(); i++)
+		for(int i = 0; i <tank2Clip.size(); i++)
 		{
-			if(!deleteBullet2)
-				tank2Clip.get(i).draw(page);
-			else
-				bulletIndex2 = i+1;
+			tank2Clip.get(i).draw(page);
 		}
 
-	
-	
 	}
 
 	// Centers the window
@@ -521,7 +493,37 @@ public class TankGame extends JPanel implements KeyListener
 
 	}
 
+	public void fire1()
+	{
+		if(tankClip1Size > 0)
+		{
+			System.out.println("Player 1 Fired");
+			TankProjectile shot1 = new TankProjectile(tank1.getX() + tank1.getWidth()/2
+					- projSize/2 - 3, tank1.getY()+tank1.getHeight()/2 - projSize/2 - 3,
+					projSize, projSize, tank1);
+			shot1.setShot(true);
+			shot1.setDirection(tank1.getDirection());
+			shot1.createBounds(shot1.getX(), shot1.getY(), shot1.getWidth(), shot1.getHeight());
+			tank1Clip.add(shot1);
+			tankClip1Size--;
+		}
+	}
 
+	public void fire2()
+	{
+		if(tankClip2Size > 0)
+		{
+			System.out.println("Player 2 Fired");
+			TankProjectile shot2 = new TankProjectile(tank2.getX() + tank2.getWidth()/2
+					- projSize/2 - 3, tank2.getY()+tank2.getHeight()/2 - projSize/2 - 3,
+					projSize, projSize, tank2);
+			shot2.setShot(true);
+			shot2.setDirection(tank2.getDirection());
+			shot2.createBounds(shot2.getX(), shot2.getY(), shot2.getWidth(), shot2.getHeight());
+			tank2Clip.add(shot2);
+			tankClip2Size--;
+		}
+	}
 
 
 	public void keyPressed(KeyEvent arg0) 
@@ -533,34 +535,12 @@ public class TankGame extends JPanel implements KeyListener
 		//Allows the user to only click once and not hold down
 		if(c == KeyEvent.VK_V)
 		{
-			if (tankClip1Size > 0)
-			{
-				System.out.println("Player 1 Fired");
-				TankProjectile shot1 = new TankProjectile(tank1.getX() + tank1.getWidth()/2
-						- projSize/2 - 3, tank1.getY()+tank1.getHeight()/2 - projSize/2 - 3,
-						projSize, projSize, tank1);
-				shot1.setShot(true);
-				shot1.setDirection(tank1.getDirection());
-				shot1.createBounds(shot1.getX(), shot1.getY(), shot1.getWidth(), shot1.getHeight());
-				tank1Clip.add(shot1);
-				tankClip1Size--;
-				bullet1Added++;
-			}
+			fire1();
 			return;
 		}
 		else if (c == KeyEvent.VK_DELETE)
 		{
-			if (tankClip2Size > 0)
-			{
-				System.out.println("Player 2 Fired");
-				TankProjectile shot2 = new TankProjectile(tank2.getX() + tank2.getWidth()/2
-						- projSize/2 - 3, tank2.getY()+tank2.getHeight()/2 - projSize/2 - 3,
-						projSize, projSize, tank2);
-				shot2.setShot(true);
-				shot2.setDirection(tank2.getDirection());
-				tank2Clip.add(shot2);
-				tankClip2Size--;
-			}
+			fire2();
 			return;
 		}
 		else

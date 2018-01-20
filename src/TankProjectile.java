@@ -7,6 +7,7 @@ public class TankProjectile extends GameObject
 	private int projSize = 10;
 	private Tank tank;
 	private boolean shot = false;
+	private boolean enabled = true;
 
 
 
@@ -38,24 +39,39 @@ public class TankProjectile extends GameObject
 		return shot;
 	}
 
-	
-	
+	public void setEnabled(boolean e)
+	{
+		enabled = e;
+	}
+
+	public boolean getEnabled()
+	{
+		return enabled;
+	}
+
+
 
 	@Override
 	public void draw(Graphics page)
 	{
-		page.setColor(Color.black);
-		page.fillOval(getX(),  getY(), projSize, projSize);
-		
-		drawBounds(page);
-
+		if(getEnabled())
+		{
+			drawBounds(page);
+			page.setColor(Color.black);
+			page.fillOval(getX(),  getY(), projSize, projSize);	
+		}
 	}
 
-	public boolean update(int speed)
+
+	//returns true when off screen, then sets enabled to false
+	public void update(int speed)
 	{
-		updateBounds();
-		
-		if(((getX() >= 0 && getX() <= 800) && (getY() >= 0 && getY() <= 800)))
+		if(getEnabled())
+		{
+
+			updateBounds();
+
+			if(((getX() >= 0 && getX()+projSize <= 800) && (getY() >= 0 && getY() + projSize <= 800)))
 			{
 				if(getDirection() == EnumDirections.UP)
 					setY(getY()-speed);
@@ -65,12 +81,10 @@ public class TankProjectile extends GameObject
 					setX(getX()-speed);
 				if(getDirection() == EnumDirections.RIGHT)
 					setX(getX()+speed);
-				return false;
 			}
 			else
-				return true;
-		 
-
+				setEnabled(false);
+		}
 
 		//updateBounds();
 	}
